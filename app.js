@@ -37,7 +37,7 @@ try{savedRead=JSON.parse(localStorage.getItem(READ_KEY)||"{}");}catch{}
 const readState={};
 documents.forEach(doc=>readState[doc.id]=doc.isNew?Boolean(savedRead[doc.id]):true);
 
-const state={status:"all",system:"전체",search:"",dateFilter:"all",readFilter:"all",sortDesc:true,page:1,pageSize:10,ssoTarget:null,clickedId:null,openTabs:[],activeTab:"dashboard"};
+const state={status:"all",system:"전체",search:"",dateFilter:"all",readFilter:"all",sortDesc:true,page:1,pageSize:10,ssoTarget:null,clickedId:null,activeDocId:null,activeTab:"dashboard"};
 
 const icons={
   all:'<svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12h6M9 16h6"/></svg>',
@@ -50,50 +50,73 @@ function systemIcon(name){
   if(name==="법령통지시스템") return '<svg viewBox="0 0 24 24"><path d="M12 3v18M5 7h14"/><path d="m5 7-3 6h6zM19 7l-3 6h6z"/><path d="M8 21h8"/></svg>';
   return icons.all;
 }
+function envelopeIcon(isRead){
+  return isRead
+    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10l8-6 8 6v9H4z"/><path d="m4 11 8 6 8-6"/><path d="m4 10 8 5 8-5"/></svg>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="m4 8 8 6 8-6"/></svg>';
+}
+function appIcon(name){
+  const paths={
+    "전체":'<path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/>',
+    "하나포털":'<path d="M6 4h8l4 4v12H6z"/><path d="M14 4v5h5"/><path d="M9 13h6M9 16h4"/>',
+    "하나플러스":'<path d="M12 5v14M5 12h14"/><path d="m15 16 2 2 4-5"/>',
+    "컴플라이언스시스템":'<path d="M12 3 5 6v5c0 4.5 2.8 7.4 7 9 4.2-1.6 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>',
+    "정보보호포털":'<path d="M12 3 5 6v5c0 4.5 2.8 7.4 7 9 4.2-1.6 7-4.5 7-9V6z"/><rect x="9" y="10" width="6" height="5" rx="1"/><path d="M10.5 10V8.7a1.5 1.5 0 0 1 3 0V10"/>',
+    "법령통지시스템":'<path d="M12 4v16M6 7h12"/><path d="m6 7-3 6h6zM18 7l-3 6h6z"/><path d="M8 20h8"/>'
+  };
+  return '<span class="app-icon-tile"><svg viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg></span>';
+}
 function saveReadState(){localStorage.setItem(READ_KEY,JSON.stringify(readState));}
-function setRead(id,value){readState[id]=value;saveReadState();renderNotices();renderDocuments();if(state.activeTab===id)renderDocumentView(id);}
+function setRead(id,value){readState[id]=value;saveReadState();renderNotices();renderDocuments();if(state.activeTab==="detail"&&state.activeDocId===id)renderDocumentView(id);}
 function unreadNewDocs(){return documents.filter(d=>d.isNew&&!readState[d.id]);}
 
 function renderWorkspaceTabs(){
   const root=document.getElementById("workspaceTabs");
-  const docTabs=state.openTabs.map(id=>{
-    const doc=documents.find(d=>d.id===id);
-    if(!doc)return "";
-    return `<button class="workspace-tab ${state.activeTab===id?"active":""}" data-tab-id="${id}" type="button"><span class="tab-label">${doc.title}</span><span class="tab-close" data-close-id="${id}">×</span></button>`;
-  }).join("");
-  root.innerHTML=`<button class="workspace-tab ${state.activeTab==="dashboard"?"active":""}" data-tab-id="dashboard" type="button"><span class="tab-label">결재 대시보드</span></button>${docTabs}`;
-  root.querySelectorAll("[data-tab-id]").forEach(btn=>btn.addEventListener("click",e=>{
-    if(e.target.closest("[data-close-id]"))return;
-    const raw=btn.dataset.tabId;activateTab(raw==="dashboard"?"dashboard":Number(raw));
-  }));
-  root.querySelectorAll("[data-close-id]").forEach(btn=>btn.addEventListener("click",e=>{
-    e.stopPropagation();closeTab(Number(btn.dataset.closeId));
-  }));
+  let detail="";
+  if(state.activeDocId){
+    const doc=documents.find(d=>d.id===state.activeDocId);
+    if(doc){
+      const shortTitle=doc.title.length>18?doc.title.slice(0,18)+"…":doc.title;
+      detail=`<button class="workspace-tab ${state.activeTab==="detail"?"active":""}" data-tab-id="detail" type="button"><span class="tab-label">결재 상세 · ${shortTitle}</span><span class="tab-close" data-close-detail>×</span></button>`;
+    }
+  }
+  root.innerHTML=`<button class="workspace-tab ${state.activeTab==="dashboard"?"active":""}" data-tab-id="dashboard" type="button"><span class="tab-label">결재 대시보드</span></button>${detail}`;
+  root.querySelector("[data-tab-id='dashboard']").addEventListener("click",()=>activateTab("dashboard"));
+  const detailTab=root.querySelector("[data-tab-id='detail']");
+  if(detailTab) detailTab.addEventListener("click",e=>{if(!e.target.closest("[data-close-detail]"))activateTab("detail");});
+  const close=root.querySelector("[data-close-detail]");
+  if(close) close.addEventListener("click",e=>{e.stopPropagation();closeDetailTab();});
 }
 function activateTab(tab){
   state.activeTab=tab;
-  document.getElementById("dashboardView").hidden=tab!=="dashboard";
-  document.getElementById("documentView").hidden=tab==="dashboard";
   document.getElementById("ssoView").hidden=true;
-  if(tab!=="dashboard")renderDocumentView(tab);
+  if(tab==="dashboard"){
+    document.getElementById("dashboardView").hidden=false;
+    document.getElementById("documentView").hidden=true;
+  }else if(tab==="detail"&&state.activeDocId){
+    document.getElementById("dashboardView").hidden=true;
+    document.getElementById("documentView").hidden=false;
+    renderDocumentView(state.activeDocId);
+  }
   renderWorkspaceTabs();
 }
 function openDocumentTab(id){
-  if(!state.openTabs.includes(id))state.openTabs.push(id);
+  state.activeDocId=id;
   setRead(id,true);
-  state.activeTab=id;
+  state.activeTab="detail";
   document.getElementById("dashboardView").hidden=true;
   document.getElementById("ssoView").hidden=true;
   document.getElementById("documentView").hidden=false;
-  renderDocumentView(id);renderWorkspaceTabs();
+  renderDocumentView(id);
+  renderWorkspaceTabs();
 }
-function closeTab(id){
-  const index=state.openTabs.indexOf(id);
-  state.openTabs=state.openTabs.filter(x=>x!==id);
-  if(state.activeTab===id){
-    const next=state.openTabs[index-1]??state.openTabs[index]??"dashboard";
-    activateTab(next);
-  }else renderWorkspaceTabs();
+function closeDetailTab(){
+  state.activeDocId=null;
+  state.activeTab="dashboard";
+  document.getElementById("dashboardView").hidden=false;
+  document.getElementById("documentView").hidden=true;
+  document.getElementById("ssoView").hidden=true;
+  renderWorkspaceTabs();
 }
 function renderDocumentView(id){
   const doc=documents.find(d=>d.id===id);if(!doc)return;
@@ -105,7 +128,11 @@ function renderDocumentView(id){
   ].map(([k,v])=>`<div class="summary-cell"><span>${k}</span><strong>${v}</strong></div>`).join("");
   document.getElementById("docSummaryText").textContent=doc.summary;
   const toggle=document.getElementById("toggleReadBtn");
-  toggle.textContent=readState[id]?"안읽음으로 표시":"읽음으로 표시";
+  const isRead=readState[id];
+  toggle.className="mail-toggle "+(isRead?"read":"unread");
+  toggle.innerHTML=envelopeIcon(isRead);
+  toggle.setAttribute("aria-label",isRead?"읽음 문서 — 안읽음으로 변경":"안읽음 문서 — 읽음으로 변경");
+  toggle.title=isRead?"읽음 · 클릭하면 안읽음으로 변경":"안읽음 · 클릭하면 읽음으로 변경";
   toggle.onclick=()=>setRead(id,!readState[id]);
   const approve=document.getElementById("docApprovalBtn");
   approve.hidden=doc.status!=="pending";
@@ -119,7 +146,7 @@ function renderStatusTabs(){
 function renderSystemCards(){
   const systems=[["전체","전체 결재 건수",""],["하나포털","하나포털","(문서 수발신)"],["하나플러스","하나플러스","(업무 전자결재)"],["컴플라이언스시스템","컴플라이언스시스템",""],["정보보호포털","정보보호포털",""],["법령통지시스템","법령통지시스템",""]];
   const root=document.getElementById("systemCards");
-  root.innerHTML=systems.map(([key,name,sub])=>`<button class="system-card ${key==="전체"?"total":""} ${state.system===key?"selected":""}" data-system="${key}" type="button"><div class="system-name">${name}</div><div class="system-sub">${sub||"&nbsp;"}</div><div class="system-metric">${systemIcon(key)}<span class="system-number">${systemTotals[key]}</span><span class="system-unit">건</span></div></button>`).join("");
+  root.innerHTML=systems.map(([key,name,sub])=>`<button class="system-card ${key==="전체"?"total":""} ${state.system===key?"selected":""}" data-system="${key}" type="button"><div class="system-card-header">${appIcon(key)}<div class="system-card-copy"><div class="system-name">${name}</div><div class="system-sub">${sub||"&nbsp;"}</div></div></div><div class="system-metric"><span class="system-number">${systemTotals[key]}</span><span class="system-unit">건</span></div></button>`).join("");
   root.querySelectorAll("[data-system]").forEach(btn=>btn.addEventListener("click",()=>{state.system=btn.dataset.system;state.page=1;renderDashboard();}));
 }
 function dateValue(d){return Number(isoDate(d));}
@@ -151,7 +178,7 @@ function renderDocuments(){
   const body=document.getElementById("documentRows");
   body.innerHTML=rows.map((doc,index)=>`<tr class="${!readState[doc.id]?"unread-row":""}" data-row-id="${doc.id}">
     <td class="num-col">${start+index+1}</td>
-    <td class="read-col"><span class="read-state ${readState[doc.id]?"read":"unread"}" title="${readState[doc.id]?"읽음":"안읽음"}"></span></td>
+    <td class="read-col"><button class="mail-state-btn ${readState[doc.id]?"read":"unread"}" data-read-id="${doc.id}" type="button" aria-label="${readState[doc.id]?"읽음 문서":"안읽음 문서"}" title="${readState[doc.id]?"읽음 · 클릭하면 안읽음으로 변경":"안읽음 · 클릭하면 읽음으로 변경"}">${envelopeIcon(readState[doc.id])}</button></td>
     <td><span class="status-badge ${doc.status}">${statusLabel[doc.status]}</span></td>
     <td title="${doc.number}">${doc.number}</td>
     <td title="${doc.title}">${doc.title}${doc.isNew&&!readState[doc.id]?'<span class="new-badge">NEW</span>':""}</td>
@@ -159,6 +186,7 @@ function renderDocuments(){
     <td><button class="action-button ${state.clickedId===doc.id?"clicked":""}" data-action-id="${doc.id}" type="button">${doc.status==="pending"?"결재하러 가기 ↗":"상세보기 ↗"}</button></td>
   </tr>`).join("");
   document.getElementById("emptyState").hidden=all.length!==0;
+  body.querySelectorAll("[data-read-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();const id=Number(btn.dataset.readId);setRead(id,!readState[id]);}));
   body.querySelectorAll("[data-row-id]").forEach(row=>row.addEventListener("click",e=>{if(e.target.closest("[data-action-id]"))return;openDocumentTab(Number(row.dataset.rowId));}));
   body.querySelectorAll("[data-action-id]").forEach(btn=>btn.addEventListener("click",e=>{
     e.stopPropagation();const doc=documents.find(d=>d.id===Number(btn.dataset.actionId));if(!doc)return;setRead(doc.id,true);
@@ -188,8 +216,10 @@ function renderDashboard(){
   document.querySelectorAll("[data-read-filter]").forEach(btn=>btn.classList.toggle("active",btn.dataset.readFilter===state.readFilter));
 }
 function showSso(target,docId){
-  if(docId)setRead(docId,true);state.ssoTarget=target;
+  if(docId){state.activeDocId=docId;setRead(docId,true);}
+  state.activeTab="detail";state.ssoTarget=target;
   document.getElementById("dashboardView").hidden=true;document.getElementById("documentView").hidden=true;document.getElementById("ssoView").hidden=false;
+  renderWorkspaceTabs();
   ["ssoTargetTitle","ssoTargetLabel","ssoTargetInline"].forEach(id=>document.getElementById(id).textContent=target);
   const bar=document.getElementById("progressBar"),label=document.getElementById("progressLabel"),finish=document.getElementById("finishSsoBtn");
   bar.classList.remove("animate");finish.hidden=true;label.textContent="안전하게 연결 중입니다...";requestAnimationFrame(()=>bar.classList.add("animate"));
@@ -198,6 +228,11 @@ function showSso(target,docId){
 function resetFilters(){state.status="all";state.system="전체";state.search="";state.dateFilter="all";state.readFilter="all";state.sortDesc=true;state.page=1;state.pageSize=10;state.clickedId=null;renderDashboard();}
 let toastTimer;function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),1500);}
 function closePopovers(except){if(except!=="notice")document.getElementById("noticePopover").hidden=true;if(except!=="profile")document.getElementById("profilePopover").hidden=true;}
+
+const STARSOON_URL="https://hanapoweronstore.ai/mascot/a5_thumbs_up.png";
+const starsoonProbe=new Image();
+starsoonProbe.addEventListener("load",()=>document.querySelectorAll(".avatar.starsoon").forEach(el=>el.classList.add("starsoon-loaded")));
+starsoonProbe.src=STARSOON_URL;
 
 document.getElementById("asOfText").textContent=fmtAsOf(loadedAt);document.getElementById("ssoAsOfText").textContent=fmtAsOf(loadedAt);
 document.getElementById("documentSearch").addEventListener("input",e=>{state.search=e.target.value;state.page=1;renderDocuments();});
@@ -209,7 +244,7 @@ document.getElementById("filterReset").addEventListener("click",()=>{state.dateF
 document.getElementById("sortDateBtn").addEventListener("click",()=>{state.sortDesc=!state.sortDesc;renderDocuments();});
 document.getElementById("pageSizeSelect").addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;renderDocuments();});
 document.getElementById("refreshBtn").addEventListener("click",e=>{e.currentTarget.classList.remove("spin");requestAnimationFrame(()=>e.currentTarget.classList.add("spin"));resetFilters();toast("현재 기준으로 결재 현황을 갱신했습니다.");});
-document.getElementById("backDashboardBtn").addEventListener("click",renderDashboard);
+document.getElementById("backDashboardBtn").addEventListener("click",()=>state.activeDocId?activateTab("detail"):renderDashboard());
 document.getElementById("finishSsoBtn").addEventListener("click",()=>toast(`${state.ssoTarget} 연결 완료 — 실제 운영 화면으로 연결되는 구간입니다.`));
 document.getElementById("noticeBtn").addEventListener("click",()=>{const p=document.getElementById("noticePopover");const open=p.hidden;closePopovers("notice");p.hidden=!open;});
 document.getElementById("profileBtn").addEventListener("click",()=>{const p=document.getElementById("profilePopover");const open=p.hidden;closePopovers("profile");p.hidden=!open;});
@@ -227,6 +262,6 @@ function goStep(step){
   if(step===4){state.status="pending";state.system="하나플러스";renderDashboard();openDocumentTab(1);}
   if(step===5){state.status="pending";state.system="하나플러스";showSso("하나플러스",1);}
 }
-document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden)renderDashboard();}});
+document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden){state.activeDocId?activateTab("detail"):renderDashboard();}}});
 
 renderDashboard();
