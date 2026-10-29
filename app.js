@@ -127,13 +127,6 @@ function renderDocumentView(id){
     ["문서번호",doc.number],["요청자",doc.requester],["요청일",fmtDate(doc.date)],["시스템",doc.system]
   ].map(([k,v])=>`<div class="summary-cell"><span>${k}</span><strong>${v}</strong></div>`).join("");
   document.getElementById("docSummaryText").textContent=doc.summary;
-  const toggle=document.getElementById("toggleReadBtn");
-  const isRead=readState[id];
-  toggle.className="mail-toggle "+(isRead?"read":"unread");
-  toggle.innerHTML=envelopeIcon(isRead);
-  toggle.setAttribute("aria-label",isRead?"읽음 문서 — 안읽음으로 변경":"안읽음 문서 — 읽음으로 변경");
-  toggle.title=isRead?"읽음 · 클릭하면 안읽음으로 변경":"안읽음 · 클릭하면 읽음으로 변경";
-  toggle.onclick=()=>setRead(id,!readState[id]);
   const approve=document.getElementById("docApprovalBtn");
   approve.hidden=doc.status!=="pending";
   approve.onclick=()=>showSso(doc.system,doc.id);
@@ -178,7 +171,7 @@ function renderDocuments(){
   const body=document.getElementById("documentRows");
   body.innerHTML=rows.map((doc,index)=>`<tr class="${!readState[doc.id]?"unread-row":""}" data-row-id="${doc.id}">
     <td class="num-col">${start+index+1}</td>
-    <td class="read-col"><button class="mail-state-btn ${readState[doc.id]?"read":"unread"}" data-read-id="${doc.id}" type="button" aria-label="${readState[doc.id]?"읽음 문서":"안읽음 문서"}" title="${readState[doc.id]?"읽음 · 클릭하면 안읽음으로 변경":"안읽음 · 클릭하면 읽음으로 변경"}">${envelopeIcon(readState[doc.id])}</button></td>
+    <td class="read-col"><span class="mail-state ${readState[doc.id]?"read":"unread"}" aria-label="${readState[doc.id]?"읽음 문서":"안읽음 문서"}" title="${readState[doc.id]?"읽음":"안읽음"}">${envelopeIcon(readState[doc.id])}</span></td>
     <td><span class="status-badge ${doc.status}">${statusLabel[doc.status]}</span></td>
     <td title="${doc.number}">${doc.number}</td>
     <td title="${doc.title}">${doc.title}${doc.isNew&&!readState[doc.id]?'<span class="new-badge">NEW</span>':""}</td>
@@ -186,7 +179,6 @@ function renderDocuments(){
     <td><button class="action-button ${state.clickedId===doc.id?"clicked":""}" data-action-id="${doc.id}" type="button">${doc.status==="pending"?"결재하러 가기 ↗":"상세보기 ↗"}</button></td>
   </tr>`).join("");
   document.getElementById("emptyState").hidden=all.length!==0;
-  body.querySelectorAll("[data-read-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();const id=Number(btn.dataset.readId);setRead(id,!readState[id]);}));
   body.querySelectorAll("[data-row-id]").forEach(row=>row.addEventListener("click",e=>{if(e.target.closest("[data-action-id]"))return;openDocumentTab(Number(row.dataset.rowId));}));
   body.querySelectorAll("[data-action-id]").forEach(btn=>btn.addEventListener("click",e=>{
     e.stopPropagation();const doc=documents.find(d=>d.id===Number(btn.dataset.actionId));if(!doc)return;setRead(doc.id,true);
@@ -215,15 +207,37 @@ function renderDashboard(){
   document.querySelectorAll("[data-date-filter]").forEach(btn=>btn.classList.toggle("active",btn.dataset.dateFilter===state.dateFilter));
   document.querySelectorAll("[data-read-filter]").forEach(btn=>btn.classList.toggle("active",btn.dataset.readFilter===state.readFilter));
 }
+let redirectTimers=[];
+function clearRedirectTimers(){redirectTimers.forEach(clearTimeout);redirectTimers=[];}
+function setRedirectPhase(phase,message,step){
+  const card=document.getElementById("redirectCard");
+  if(!card)return;
+  card.dataset.phase=phase;
+  document.getElementById("redirectStatusText").textContent=message;
+  document.querySelectorAll("[data-step-dot]").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.stepDot)<=step));
+}
 function showSso(target,docId){
   if(docId){state.activeDocId=docId;setRead(docId,true);}
   state.activeTab="detail";state.ssoTarget=target;
-  document.getElementById("dashboardView").hidden=true;document.getElementById("documentView").hidden=true;document.getElementById("ssoView").hidden=false;
+  document.getElementById("dashboardView").hidden=true;
+  document.getElementById("documentView").hidden=true;
+  document.getElementById("ssoView").hidden=false;
   renderWorkspaceTabs();
-  ["ssoTargetTitle","ssoTargetLabel","ssoTargetInline"].forEach(id=>document.getElementById(id).textContent=target);
-  const bar=document.getElementById("progressBar"),label=document.getElementById("progressLabel"),finish=document.getElementById("finishSsoBtn");
-  bar.classList.remove("animate");finish.hidden=true;label.textContent="안전하게 연결 중입니다...";requestAnimationFrame(()=>bar.classList.add("animate"));
-  setTimeout(()=>{label.textContent=`${target} 연결이 완료되었습니다.`;finish.hidden=false;},1650);
+  document.getElementById("ssoTargetLabel").textContent=target;
+  document.getElementById("ssoTargetTitle").textContent=target;
+
+  clearRedirectTimers();
+  setRedirectPhase("idle","선택한 결재 문서를 안전하게 연결하고 있습니다.",1);
+
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    setRedirectPhase("complete",target+" 결재 시스템으로 전환되었습니다.",3);
+    return;
+  }
+
+  redirectTimers.push(setTimeout(()=>setRedirectPhase("sending","결재 정보를 SSO 게이트로 전달하고 있습니다.",1),220));
+  redirectTimers.push(setTimeout(()=>setRedirectPhase("auth","통합인증을 확인하고 있습니다.",2),1020));
+  redirectTimers.push(setTimeout(()=>setRedirectPhase("arrival",target+" 연결을 준비하고 있습니다.",3),1700));
+  redirectTimers.push(setTimeout(()=>setRedirectPhase("complete",target+" 결재 시스템으로 전환되었습니다.",3),2350));
 }
 function resetFilters(){state.status="all";state.system="전체";state.search="";state.dateFilter="all";state.readFilter="all";state.sortDesc=true;state.page=1;state.pageSize=10;state.clickedId=null;renderDashboard();}
 let toastTimer;function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),1500);}
@@ -244,8 +258,7 @@ document.getElementById("filterReset").addEventListener("click",()=>{state.dateF
 document.getElementById("sortDateBtn").addEventListener("click",()=>{state.sortDesc=!state.sortDesc;renderDocuments();});
 document.getElementById("pageSizeSelect").addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;renderDocuments();});
 document.getElementById("refreshBtn").addEventListener("click",e=>{e.currentTarget.classList.remove("spin");requestAnimationFrame(()=>e.currentTarget.classList.add("spin"));resetFilters();toast("현재 기준으로 결재 현황을 갱신했습니다.");});
-document.getElementById("backDashboardBtn").addEventListener("click",()=>state.activeDocId?activateTab("detail"):renderDashboard());
-document.getElementById("finishSsoBtn").addEventListener("click",()=>toast(`${state.ssoTarget} 연결 완료 — 실제 운영 화면으로 연결되는 구간입니다.`));
+document.getElementById("backDashboardBtn").addEventListener("click",()=>{clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();});
 document.getElementById("noticeBtn").addEventListener("click",()=>{const p=document.getElementById("noticePopover");const open=p.hidden;closePopovers("notice");p.hidden=!open;});
 document.getElementById("profileBtn").addEventListener("click",()=>{const p=document.getElementById("profilePopover");const open=p.hidden;closePopovers("profile");p.hidden=!open;});
 document.querySelector("[data-step='2']").addEventListener("click",()=>{closePopovers();goStep(2);});
@@ -262,6 +275,6 @@ function goStep(step){
   if(step===4){state.status="pending";state.system="하나플러스";renderDashboard();openDocumentTab(1);}
   if(step===5){state.status="pending";state.system="하나플러스";showSso("하나플러스",1);}
 }
-document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden){state.activeDocId?activateTab("detail"):renderDashboard();}}});
+document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden){clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();}}});
 
 renderDashboard();
