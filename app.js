@@ -261,7 +261,6 @@ document.getElementById("refreshBtn").addEventListener("click",e=>{e.currentTarg
 document.getElementById("backDashboardBtn").addEventListener("click",()=>{clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();});
 document.getElementById("noticeBtn").addEventListener("click",()=>{const p=document.getElementById("noticePopover");const open=p.hidden;closePopovers("notice");p.hidden=!open;});
 document.getElementById("profileBtn").addEventListener("click",()=>{const p=document.getElementById("profilePopover");const open=p.hidden;closePopovers("profile");p.hidden=!open;});
-document.querySelector("[data-step='2']").addEventListener("click",()=>{closePopovers();goStep(2);});
 document.querySelectorAll(".profile-popover>button").forEach(btn=>btn.addEventListener("click",()=>toast("프로토타입 메뉴입니다.")));
 document.querySelectorAll("[data-top]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("[data-top]").forEach(x=>x.classList.remove("active"));btn.classList.add("active");toast(`${btn.dataset.top} 메뉴를 선택했습니다.`);}));
 document.querySelectorAll("[data-side]").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("[data-side]").forEach(x=>x.classList.remove("active"));btn.classList.add("active");if(btn.dataset.side==="결재 대시보드")renderDashboard();else toast(`${btn.dataset.side} 메뉴는 발표 시연 범위 밖입니다.`);}));
