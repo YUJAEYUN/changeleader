@@ -127,13 +127,6 @@ function renderDocumentView(id){
     ["문서번호",doc.number],["요청자",doc.requester],["요청일",fmtDate(doc.date)],["시스템",doc.system]
   ].map(([k,v])=>`<div class="summary-cell"><span>${k}</span><strong>${v}</strong></div>`).join("");
   document.getElementById("docSummaryText").textContent=doc.summary;
-  const toggle=document.getElementById("toggleReadBtn");
-  const isRead=readState[id];
-  toggle.className="mail-toggle "+(isRead?"read":"unread");
-  toggle.innerHTML=envelopeIcon(isRead);
-  toggle.setAttribute("aria-label",isRead?"읽음 문서 — 안읽음으로 변경":"안읽음 문서 — 읽음으로 변경");
-  toggle.title=isRead?"읽음 · 클릭하면 안읽음으로 변경":"안읽음 · 클릭하면 읽음으로 변경";
-  toggle.onclick=()=>setRead(id,!readState[id]);
   const approve=document.getElementById("docApprovalBtn");
   approve.hidden=doc.status!=="pending";
   approve.onclick=()=>showSso(doc.system,doc.id);
@@ -178,7 +171,7 @@ function renderDocuments(){
   const body=document.getElementById("documentRows");
   body.innerHTML=rows.map((doc,index)=>`<tr class="${!readState[doc.id]?"unread-row":""}" data-row-id="${doc.id}">
     <td class="num-col">${start+index+1}</td>
-    <td class="read-col"><button class="mail-state-btn ${readState[doc.id]?"read":"unread"}" data-read-id="${doc.id}" type="button" aria-label="${readState[doc.id]?"읽음 문서":"안읽음 문서"}" title="${readState[doc.id]?"읽음 · 클릭하면 안읽음으로 변경":"안읽음 · 클릭하면 읽음으로 변경"}">${envelopeIcon(readState[doc.id])}</button></td>
+    <td class="read-col"><span class="mail-state ${readState[doc.id]?"read":"unread"}" aria-label="${readState[doc.id]?"읽음 문서":"안읽음 문서"}" title="${readState[doc.id]?"읽음":"안읽음"}">${envelopeIcon(readState[doc.id])}</span></td>
     <td><span class="status-badge ${doc.status}">${statusLabel[doc.status]}</span></td>
     <td title="${doc.number}">${doc.number}</td>
     <td title="${doc.title}">${doc.title}${doc.isNew&&!readState[doc.id]?'<span class="new-badge">NEW</span>':""}</td>
@@ -186,7 +179,6 @@ function renderDocuments(){
     <td><button class="action-button ${state.clickedId===doc.id?"clicked":""}" data-action-id="${doc.id}" type="button">${doc.status==="pending"?"결재하러 가기 ↗":"상세보기 ↗"}</button></td>
   </tr>`).join("");
   document.getElementById("emptyState").hidden=all.length!==0;
-  body.querySelectorAll("[data-read-id]").forEach(btn=>btn.addEventListener("click",e=>{e.stopPropagation();const id=Number(btn.dataset.readId);setRead(id,!readState[id]);}));
   body.querySelectorAll("[data-row-id]").forEach(row=>row.addEventListener("click",e=>{if(e.target.closest("[data-action-id]"))return;openDocumentTab(Number(row.dataset.rowId));}));
   body.querySelectorAll("[data-action-id]").forEach(btn=>btn.addEventListener("click",e=>{
     e.stopPropagation();const doc=documents.find(d=>d.id===Number(btn.dataset.actionId));if(!doc)return;setRead(doc.id,true);
