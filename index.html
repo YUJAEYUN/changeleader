@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#006060" />
+  <title>결재 대시보드 프로토타입</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="side-rail" aria-label="하나포털 바로가기">
+      <div class="hana-symbol" aria-hidden="true">
+        <span class="dot"></span>
+        <span class="arc arc-a"></span>
+        <span class="arc arc-b"></span>
+      </div>
+      <nav id="sideNav" class="side-nav"></nav>
+    </aside>
+
+    <div class="workspace">
+      <header class="tabbar">
+        <button class="top-tab" id="homeTab" type="button">HOME</button>
+        <button class="top-tab active" type="button">결재 대시보드 <span aria-hidden="true">×</span></button>
+        <button class="top-tab add" type="button" aria-label="탭 추가">＋</button>
+      </header>
+
+      <main class="dashboard" id="dashboardView">
+        <section class="dashboard-header">
+          <div>
+            <h1>결재 대시보드</h1>
+            <p>각 시스템의 결재 현황을 한눈에 확인할 수 있습니다.</p>
+          </div>
+          <div class="as-of">
+            <span>2026. 09. 08. (화) 10:24 기준</span>
+            <button id="refreshBtn" class="icon-button" type="button" aria-label="새로고침">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5"/><path d="M19 11a7 7 0 1 0 1 4"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="status-tabs" id="statusTabs" aria-label="결재 상태"></section>
+
+        <section class="system-cards" id="systemCards" aria-label="시스템별 결재 현황"></section>
+
+        <section class="document-section">
+          <div class="document-title-row">
+            <h2 id="documentTitle">전체 결재 문서 <strong>12건</strong></h2>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-check"><span class="fake-check"></span></th>
+                  <th>상태</th>
+                  <th>문서번호</th>
+                  <th>문서명</th>
+                  <th>시스템명</th>
+                  <th>요청자</th>
+                  <th>요청일</th>
+                  <th>바로가기</th>
+                </tr>
+              </thead>
+              <tbody id="documentRows"></tbody>
+            </table>
+          </div>
+
+          <div class="table-footer">
+            <span id="totalCountText">총 12건</span>
+            <div class="pagination" aria-label="페이지">
+              <button type="button" disabled>«</button>
+              <button type="button" disabled>‹</button>
+              <button class="current" type="button">1</button>
+              <button type="button">2</button>
+              <button type="button">›</button>
+              <button type="button">»</button>
+            </div>
+            <button class="page-size" type="button">10개씩 보기 <span>⌄</span></button>
+          </div>
+        </section>
+      </main>
+
+      <main class="sso-view" id="ssoView" hidden>
+        <section class="dashboard-header sso-header">
+          <div>
+            <h1>결재 대시보드</h1>
+            <p>각 시스템의 결재 현황을 한눈에 확인할 수 있습니다.</p>
+          </div>
+          <div class="as-of">
+            <span>2026. 09. 08. (화) 10:24 기준</span>
+          </div>
+        </section>
+
+        <section class="sso-card">
+          <h2><em>하나플러스</em>로 이동합니다</h2>
+          <p class="sso-copy">통합인증(SSO)을 통해 해당 결재 화면으로 연결 중입니다.</p>
+
+          <div class="sso-flow" aria-label="SSO 연결 흐름">
+            <div class="sso-node">
+              <div class="sso-circle" id="dashboardNodeIcon"></div>
+              <strong>결재 대시보드</strong>
+            </div>
+            <div class="dot-line" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="sso-node">
+              <div class="sso-circle lock-circle">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              </div>
+              <strong>SSO 인증 중</strong>
+            </div>
+            <div class="dot-line" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="sso-node">
+              <div class="sso-circle plus-circle">
+                <span class="mini-hana-symbol"><i></i></span>
+              </div>
+              <strong>하나플러스</strong>
+            </div>
+          </div>
+
+          <p class="sso-subcopy">별도 로그인 없이 선택한 하나플러스 결재 화면으로 이동합니다.</p>
+          <div class="progress-track" aria-label="연결 진행률"><div class="progress-bar" id="progressBar"></div></div>
+          <p class="progress-label" id="progressLabel">안전하게 연결 중입니다...</p>
+          <button class="return-button" id="returnBtn" type="button" hidden>결재 대시보드로 돌아가기</button>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="presentation-hint" aria-hidden="true">1 전체 · 2 결재대기 · 3 하나플러스 · 4 결재 이동 · 5 SSO</div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
