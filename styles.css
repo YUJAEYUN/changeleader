@@ -158,3 +158,25 @@ th{height:38px;font-size:12px}
 
 /* SSO target uses local embedded official Hana Securities symbol. */
 .target-circle img{display:block}
+
+
+/* Read state is system-derived, not user-editable. */
+.mail-state{
+  display:inline-grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  margin:auto;
+  color:#9aa5b1;
+}
+.mail-state svg{
+  width:21px;
+  height:21px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.mail-state.unread{color:var(--hana-green)}
+.mail-state.read{color:#9aa5b1}
