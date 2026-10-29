@@ -56,3 +56,105 @@ button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,inpu
 .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#23364a;color:#fff;border-radius:9px;padding:11px 16px;font-size:13px;box-shadow:var(--shadow);z-index:150;transition:.2s ease}.toast.show{opacity:1;transform:translate(-50%,0)}.keyboard-hint{position:fixed;right:15px;bottom:10px;background:rgba(255,255,255,.82);border:1px solid #e1e7ea;border-radius:7px;padding:6px 9px;font-size:10px;color:#8a96a6;opacity:0;transition:.2s;pointer-events:none}body:hover .keyboard-hint{opacity:.8}
 @media(max-width:1200px){.portal{width:calc(100vw - 20px);margin:10px auto;grid-template-columns:150px minmax(0,1fr)}.top-nav-item{padding:0 6px;font-size:12px}.global-search{width:220px}.system-cards{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:850px){.portal{grid-template-columns:1fr;border-radius:0;width:100%;margin:0}.side-panel{display:none}.top-header{overflow-x:auto}.top-nav{display:none}.content{padding:20px 16px}.page-heading,.document-view-head{flex-direction:column}.status-tabs{display:grid;grid-template-columns:repeat(2,1fr)}.status-tab{min-width:0}.system-cards{grid-template-columns:repeat(2,1fr)}.document-toolbar{align-items:flex-start;flex-direction:column}.document-tools{width:100%}.document-search{flex:1;width:auto}.document-summary-grid{grid-template-columns:repeat(2,1fr)}.sso-flow{grid-template-columns:1fr;gap:15px}.connector{transform:rotate(90deg);width:80px;margin:auto}.table-footer{grid-template-columns:1fr}.pagination{justify-content:center}.page-size{justify-self:start}}
+
+/* ===== A안: 실제 사내 시스템형 밀도 ===== */
+.portal{min-height:820px}
+.portal-brand{height:52px;padding:0 18px;font-size:17px}
+.side-menu{padding:12px 9px}
+.side-section-title{padding:0 9px 7px;font-size:12px}
+.side-item{height:36px;padding:0 10px;font-size:12px}
+.top-header{height:52px;padding:0 16px}
+.top-nav{gap:2px}
+.top-nav-item{padding:0 8px;font-size:12px}
+.top-nav-item.active::after{left:7px;right:7px;height:2px}
+.header-actions{gap:7px}
+.global-search,.document-search{height:32px;padding:0 10px}
+.global-search{width:238px}
+.global-search input,.document-search input{font-size:12px}
+.global-search svg,.document-search svg,.filter-button svg{width:16px;height:16px}
+.header-icon{width:34px;height:34px}
+.header-icon svg{width:19px;height:19px}
+.notice-count{right:-2px;top:-2px;min-width:16px;height:16px;font-size:9px}
+.profile-button{height:36px;gap:6px;font-size:12px}
+.avatar{width:26px;height:26px}
+.avatar.large{width:44px;height:44px}
+.popover{top:47px}
+.workspace-tabs{height:34px}
+.workspace-tab{height:30px;min-width:112px;max-width:210px;font-size:12px}
+.content{padding:20px 28px 22px;min-height:734px}
+.page-heading h1{font-size:24px;margin-bottom:4px}
+.page-heading p{font-size:12px}
+.as-of{font-size:12px;padding-top:5px}
+.refresh-button{width:29px;height:29px}
+.refresh-button svg{width:19px;height:19px}
+.status-tabs{gap:8px;margin:14px 0 14px}
+.status-tab{min-width:130px;height:38px;border-radius:8px;gap:7px;font-size:12px}
+.status-tab svg{width:18px;height:18px}
+.status-count{font-size:14px}
+.system-cards{gap:7px;margin-bottom:16px}
+.system-card{min-height:112px;padding:12px 13px}
+.system-card-header{display:flex;align-items:center;gap:9px;min-width:0}
+.system-card-copy{min-width:0;flex:1}
+.system-name{font-size:13px}
+.system-sub{font-size:11px;min-height:15px;margin-top:2px}
+.system-metric{margin-top:10px;gap:7px}
+.system-number{font-size:28px}
+.system-unit{font-size:12px}
+.app-icon-tile{
+  width:38px;height:38px;flex:0 0 38px;border-radius:8px;background:var(--hana-green);
+  display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(0,78,66,.09)
+}
+.system-card.selected .app-icon-tile{background:var(--hana-dark)}
+.system-card.total .app-icon-tile{background:var(--hana-dark)}
+.app-icon-tile svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.document-toolbar{min-height:54px}
+.document-toolbar h2{font-size:18px}
+.document-search{width:278px}
+.filter-button{height:32px;font-size:12px}
+.filter-panel{padding:10px 12px}
+.filter-label{font-size:11px}
+.filter-option{height:28px;font-size:11px}
+table{min-width:1120px}
+th,td{height:40px;padding:8px 9px;font-size:13px}
+th{height:38px;font-size:12px}
+.num-col{width:46px}
+.read-col{width:50px;text-align:center}
+.status-col{width:90px}
+.number-col{width:140px}
+.system-col{width:158px}
+.requester-col{width:94px}
+.date-col{width:120px}
+.action-col{width:146px}
+.status-badge{min-width:66px;height:24px;font-size:11px}
+.action-button{height:30px;font-size:12px}
+.table-footer{min-height:52px;font-size:12px}
+.document-view-head h1{font-size:24px}
+.document-view-actions{gap:7px}
+.document-paper{margin-top:20px;padding:24px 30px}
+.paper-section p,.paper-section li{font-size:13px}
+
+/* Envelope read/unread state */
+.mail-head-icon{width:17px;height:17px;fill:none;stroke:#83909f;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+.mail-state-btn,.mail-toggle{
+  display:inline-grid;place-items:center;border:0;background:transparent;padding:0;border-radius:6px;color:#8b97a5
+}
+.mail-state-btn{width:30px;height:30px;margin:auto}
+.mail-toggle{width:36px;height:36px;border:1px solid var(--line);background:#fff}
+.mail-state-btn:hover,.mail-toggle:hover{background:#f0f7f5}
+.mail-state-btn svg,.mail-toggle svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mail-state-btn.unread,.mail-toggle.unread{color:var(--hana-green)}
+.mail-state-btn.read,.mail-toggle.read{color:#9aa5b1}
+.unread-row td{font-weight:700;background:#fcfffe}
+
+/* Starsoon profile: remote image is optional; fallback never renders as broken/empty. */
+.avatar.starsoon{position:relative;background-image:none;background:#eef8f5;display:grid;place-items:center;color:var(--hana-green);font-weight:900}
+.avatar.starsoon::before{content:"★";font-size:12px;line-height:1}
+.avatar.starsoon.large::before{font-size:18px}
+.avatar.starsoon.starsoon-loaded::before{content:""}
+.avatar.starsoon.starsoon-loaded{
+  background-image:url("https://hanapoweronstore.ai/mascot/a5_thumbs_up.png");
+  background-repeat:no-repeat;background-size:205% auto;background-position:98% 47%
+}
+
+/* SSO target uses local embedded official Hana Securities symbol. */
+.target-circle img{display:block}
