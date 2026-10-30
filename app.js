@@ -208,36 +208,52 @@ function renderDashboard(){
   document.querySelectorAll("[data-read-filter]").forEach(btn=>btn.classList.toggle("active",btn.dataset.readFilter===state.readFilter));
 }
 let redirectTimers=[];
-function clearRedirectTimers(){redirectTimers.forEach(clearTimeout);redirectTimers=[];}
-function setRedirectPhase(phase,message,step){
-  const card=document.getElementById("redirectCard");
-  if(!card)return;
-  card.dataset.phase=phase;
-  document.getElementById("redirectStatusText").textContent=message;
-  document.querySelectorAll("[data-step-dot]").forEach(dot=>dot.classList.toggle("active",Number(dot.dataset.stepDot)<=step));
+function clearRedirectTimers(){
+  redirectTimers.forEach(clearTimeout);
+  redirectTimers=[];
+}
+function setNativeTransitionPhase(phase){
+  const transition=document.getElementById("nativeTransition");
+  if(transition)transition.dataset.phase=phase;
 }
 function showSso(target,docId){
+  const doc=docId?documents.find(d=>d.id===docId):null;
   if(docId){state.activeDocId=docId;setRead(docId,true);}
-  state.activeTab="detail";state.ssoTarget=target;
+  state.activeTab="detail";
+  state.ssoTarget=target;
+
   document.getElementById("dashboardView").hidden=true;
   document.getElementById("documentView").hidden=true;
   document.getElementById("ssoView").hidden=false;
   renderWorkspaceTabs();
+
   document.getElementById("ssoTargetLabel").textContent=target;
   document.getElementById("ssoTargetTitle").textContent=target;
+  document.getElementById("transitionArrivedTitle").textContent=target;
+  document.getElementById("transitionSourceSystem").textContent=target;
+  document.getElementById("transitionDocTitle").textContent=doc?doc.title:"선택한 결재 문서";
+
+  const icon=appIcon(target);
+  document.getElementById("transitionTargetIcon").innerHTML=icon;
+  document.getElementById("transitionArrivedIcon").innerHTML=icon;
 
   clearRedirectTimers();
-  setRedirectPhase("idle","선택한 결재 문서를 안전하게 연결하고 있습니다.",1);
+  setNativeTransitionPhase("idle");
+  document.getElementById("nativeAuthText").textContent="SSO 인증 중";
 
   if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){
-    setRedirectPhase("complete",target+" 결재 시스템으로 전환되었습니다.",3);
+    document.getElementById("nativeAuthText").textContent="SSO 인증 완료";
+    setNativeTransitionPhase("complete");
     return;
   }
 
-  redirectTimers.push(setTimeout(()=>setRedirectPhase("sending","결재 정보를 SSO 게이트로 전달하고 있습니다.",1),220));
-  redirectTimers.push(setTimeout(()=>setRedirectPhase("auth","통합인증을 확인하고 있습니다.",2),1020));
-  redirectTimers.push(setTimeout(()=>setRedirectPhase("arrival",target+" 연결을 준비하고 있습니다.",3),1700));
-  redirectTimers.push(setTimeout(()=>setRedirectPhase("complete",target+" 결재 시스템으로 전환되었습니다.",3),2350));
+  redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("auth"),120));
+  redirectTimers.push(setTimeout(()=>{
+    document.getElementById("nativeAuthText").textContent="SSO 인증 완료";
+    setNativeTransitionPhase("confirmed");
+  },480));
+  redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("transfer"),820));
+  redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("complete"),1480));
 }
 let aggregationTimers=[];
 let aggregationAnimations=[];
@@ -340,7 +356,7 @@ const starsoonProbe=new Image();
 starsoonProbe.addEventListener("load",()=>document.querySelectorAll(".avatar.starsoon").forEach(el=>el.classList.add("starsoon-loaded")));
 starsoonProbe.src=STARSOON_URL;
 
-document.getElementById("asOfText").textContent=fmtAsOf(loadedAt);document.getElementById("ssoAsOfText").textContent=fmtAsOf(loadedAt);
+document.getElementById("asOfText").textContent=fmtAsOf(loadedAt);
 document.getElementById("documentSearch").addEventListener("input",e=>{state.search=e.target.value;state.page=1;renderDocuments();});
 document.getElementById("globalSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){state.search=e.target.value;state.page=1;renderDashboard();toast("통합검색 결과를 결재 문서에 반영했습니다.");}});
 document.getElementById("filterBtn").addEventListener("click",()=>{const p=document.getElementById("filterPanel");p.hidden=!p.hidden;});
@@ -350,7 +366,7 @@ document.getElementById("filterReset").addEventListener("click",()=>{state.dateF
 document.getElementById("sortDateBtn").addEventListener("click",()=>{state.sortDesc=!state.sortDesc;renderDocuments();});
 document.getElementById("pageSizeSelect").addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;renderDocuments();});
 document.getElementById("refreshBtn").addEventListener("click",e=>{e.currentTarget.classList.remove("spin");requestAnimationFrame(()=>e.currentTarget.classList.add("spin"));resetFilters();aggregationTimers.push(setTimeout(runAggregationAnimation,90));});
-document.getElementById("backDashboardBtn").addEventListener("click",()=>{clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();});
+document.getElementById("backDashboardBtn").addEventListener("click",()=>{clearRedirectTimers();setNativeTransitionPhase("idle");state.activeDocId?activateTab("detail"):renderDashboard();});
 document.getElementById("noticeBtn").addEventListener("click",()=>{const p=document.getElementById("noticePopover");const open=p.hidden;closePopovers("notice");p.hidden=!open;});
 document.getElementById("profileBtn").addEventListener("click",()=>{const p=document.getElementById("profilePopover");const open=p.hidden;closePopovers("profile");p.hidden=!open;});
 document.querySelectorAll(".profile-popover>button").forEach(btn=>btn.addEventListener("click",()=>toast("프로토타입 메뉴입니다.")));
@@ -366,7 +382,7 @@ function goStep(step){
   if(step===4){state.status="pending";state.system="하나플러스";renderDashboard();openDocumentTab(1);}
   if(step===5){state.status="pending";state.system="하나플러스";showSso("하나플러스",1);}
 }
-document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden){clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();}}});
+document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden){clearRedirectTimers();setNativeTransitionPhase("idle");state.activeDocId?activateTab("detail"):renderDashboard();}}});
 
 renderDashboard();
 aggregationTimers.push(setTimeout(runAggregationAnimation,180));
