@@ -218,12 +218,12 @@ function setNativeTransitionPhase(phase){
   if(transition)transition.dataset.phase=phase;
 }
 const nativeSystemShots={
-  "하나포털":"./assets/source-systems/hana-portal.png",
-  "하나플러스":"./assets/source-systems/hana-plus.png",
-  "컴플라이언스시스템":"./assets/source-systems/compliance.png",
-  "HR시스템":"./assets/source-systems/hr-approval.png"
+  "하나포털":"./assets/source-systems/hana-portal.webp",
+  "하나플러스":"./assets/source-systems/hana-plus.webp",
+  "컴플라이언스시스템":"./assets/source-systems/compliance.webp",
+  "HR시스템":"./assets/source-systems/hr-approval.webp"
 };
-const hrLoginShot="./assets/source-systems/hr-login.png";
+const hrLoginShot="./assets/source-systems/hr-login.webp";
 
 function showSso(target,docId){
   const doc=docId?documents.find(d=>d.id===docId):null;
