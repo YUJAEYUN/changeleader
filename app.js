@@ -1,4 +1,4 @@
-const systemTotals={"전체":12,"하나포털":3,"하나플러스":4,"컴플라이언스시스템":2,"정보보호포털":2,"법령통지시스템":1};
+const systemTotals={"전체":12,"하나포털":2,"하나플러스":3,"HR시스템":2,"컴플라이언스시스템":2,"정보보호포털":2,"법령통지시스템":1};
 const statusTotals={all:12,approved:4,pending:6,rejected:2};
 const statusLabel={all:"전체",approved:"승인완료",pending:"결재대기",rejected:"반려"};
 const DAY_NAMES=["일","월","화","수","목","금","토"];
@@ -19,7 +19,7 @@ function docNo(prefix,seq){return `${prefix}-${loadedAt.getFullYear()}-${String(
 const dates=[0,0,1,1,2,2,3,4,4,5,6,7].map(relativeDate);
 const documents=[
   {id:1,status:"pending",number:docNo("HP",928),title:"마케팅 행사 운영비 승인 요청",system:"하나플러스",requester:"이서연",date:dates[0],summary:"금주 진행 예정인 고객 대상 마케팅 행사의 운영비 집행을 위한 승인 요청입니다.",isNew:true},
-  {id:2,status:"pending",number:docNo("HPT",924),title:"시스템 개선 작업 승인 요청",system:"하나포털",requester:"이준호",date:dates[1],summary:"내부 업무 시스템 개선 작업 시행을 위한 승인 요청입니다.",isNew:true},
+  {id:2,status:"pending",number:docNo("HR",924),title:"근태 정정 신청 승인 요청",system:"HR시스템",requester:"이준호",date:dates[1],summary:"근태 기록 정정 신청에 대한 승인 요청입니다.",isNew:true},
   {id:3,status:"approved",number:docNo("HP",927),title:"사내 교육 프로그램 결과 보고",system:"하나플러스",requester:"김민수",date:dates[2],summary:"사내 교육 프로그램 운영 결과 및 후속 조치 보고입니다."},
   {id:4,status:"pending",number:docNo("CP",411),title:"광고 심의 요청서",system:"컴플라이언스시스템",requester:"박지훈",date:dates[3],summary:"대외 광고 집행 전 컴플라이언스 심의를 요청합니다."},
   {id:5,status:"rejected",number:docNo("IS",352),title:"보안 취약점 조치 결과 보고",system:"정보보호포털",requester:"정다운",date:dates[4],summary:"보안 취약점 조치 결과에 대한 검토 문서입니다."},
@@ -28,7 +28,7 @@ const documents=[
   {id:8,status:"approved",number:docNo("CP",188),title:"내부통제 점검 계획(안)",system:"컴플라이언스시스템",requester:"한지민",date:dates[7],summary:"분기 내부통제 점검 계획에 대한 승인 문서입니다."},
   {id:9,status:"pending",number:docNo("LS",89),title:"법령 개정사항 검토 요청",system:"법령통지시스템",requester:"오세훈",date:dates[8],summary:"신규 법령 개정사항의 업무 영향 검토 요청입니다."},
   {id:10,status:"pending",number:docNo("IS",341),title:"개인정보 처리방침 개정 검토",system:"정보보호포털",requester:"이지은",date:dates[9],summary:"개인정보 처리방침 개정안 검토 요청입니다."},
-  {id:11,status:"approved",number:docNo("HP",925),title:"거래처 계약 검토 요청",system:"하나플러스",requester:"최유진",date:dates[10],summary:"신규 거래처 계약 체결을 위한 내부 검토 요청입니다."},
+  {id:11,status:"approved",number:docNo("HR",925),title:"사내 교육비 지원 승인 요청",system:"HR시스템",requester:"최유진",date:dates[10],summary:"직원 교육비 지원 신청에 대한 승인 완료 문서입니다."},
   {id:12,status:"rejected",number:docNo("HPT",910),title:"대외기관 문서 수신 보고",system:"하나포털",requester:"정다운",date:dates[11],summary:"대외기관 수신 문서에 대한 검토 및 보고 문서입니다."}
 ];
 
@@ -60,6 +60,7 @@ function appIcon(name){
     "전체":'<path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/>',
     "하나포털":'<path d="M6 4h8l4 4v12H6z"/><path d="M14 4v5h5"/><path d="M9 13h6M9 16h4"/>',
     "하나플러스":'<path d="M12 5v14M5 12h14"/><path d="m15 16 2 2 4-5"/>',
+    "HR시스템":'<path d="M6 5v14M18 5v14M6 12h12"/><circle cx="12" cy="7" r="2"/><path d="M9 18c.7-2 1.7-3 3-3s2.3 1 3 3"/>',
     "컴플라이언스시스템":'<path d="M12 3 5 6v5c0 4.5 2.8 7.4 7 9 4.2-1.6 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>',
     "정보보호포털":'<path d="M12 3 5 6v5c0 4.5 2.8 7.4 7 9 4.2-1.6 7-4.5 7-9V6z"/><rect x="9" y="10" width="6" height="5" rx="1"/><path d="M10.5 10V8.7a1.5 1.5 0 0 1 3 0V10"/>',
     "법령통지시스템":'<path d="M12 4v16M6 7h12"/><path d="m6 7-3 6h6zM18 7l-3 6h6z"/><path d="M8 20h8"/>'
@@ -137,7 +138,7 @@ function renderStatusTabs(){
   root.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>{state.status=btn.dataset.status;state.page=1;renderDashboard();}));
 }
 function renderSystemCards(){
-  const systems=[["전체","전체 결재 건수",""],["하나포털","하나포털","(문서 수발신)"],["하나플러스","하나플러스","(업무 전자결재)"],["컴플라이언스시스템","컴플라이언스시스템",""],["정보보호포털","정보보호포털",""],["법령통지시스템","법령통지시스템",""]];
+  const systems=[["전체","전체 결재 건수",""],["하나포털","하나포털","(문서 수발신)"],["하나플러스","하나플러스","(업무 전자결재)"],["HR시스템","HR시스템","(인사 결재)"],["컴플라이언스시스템","컴플라이언스시스템",""],["정보보호포털","정보보호포털",""],["법령통지시스템","법령통지시스템",""]];
   const root=document.getElementById("systemCards");
   root.innerHTML=systems.map(([key,name,sub])=>`<button class="system-card ${key==="전체"?"total":""} ${state.system===key?"selected":""}" data-system="${key}" type="button"><div class="system-card-header">${appIcon(key)}<div class="system-card-copy"><div class="system-name">${name}</div><div class="system-sub">${sub||"&nbsp;"}</div></div></div><div class="system-metric"><span class="system-number">${systemTotals[key]}</span><span class="system-unit">건</span></div></button>`).join("");
   root.querySelectorAll("[data-system]").forEach(btn=>btn.addEventListener("click",()=>{state.system=btn.dataset.system;state.page=1;renderDashboard();}));
@@ -216,6 +217,14 @@ function setNativeTransitionPhase(phase){
   const transition=document.getElementById("nativeTransition");
   if(transition)transition.dataset.phase=phase;
 }
+const nativeSystemShots={
+  "하나포털":"./assets/source-systems/hana-portal.png",
+  "하나플러스":"./assets/source-systems/hana-plus.png",
+  "컴플라이언스시스템":"./assets/source-systems/compliance.png",
+  "HR시스템":"./assets/source-systems/hr-approval.png"
+};
+const hrLoginShot="./assets/source-systems/hr-login.png";
+
 function showSso(target,docId){
   const doc=docId?documents.find(d=>d.id===docId):null;
   if(docId){state.activeDocId=docId;setRead(docId,true);}
@@ -237,6 +246,18 @@ function showSso(target,docId){
   document.getElementById("transitionTargetIcon").innerHTML=icon;
   document.getElementById("transitionArrivedIcon").innerHTML=icon;
 
+  const transition=document.getElementById("nativeTransition");
+  const destination=document.getElementById("nativeDestinationScreen");
+  const realShot=document.getElementById("nativeSystemShot");
+  const loginShot=document.getElementById("nativeHrLoginShot");
+  const hasRealShot=Boolean(nativeSystemShots[target]);
+  destination.classList.toggle("has-real-shot",hasRealShot);
+  transition.dataset.target=target==="HR시스템"?"hr":hasRealShot?"captured":"generic";
+  realShot.hidden=!hasRealShot;
+  loginShot.hidden=target!=="HR시스템";
+  if(hasRealShot) realShot.src=nativeSystemShots[target];
+  if(target==="HR시스템") loginShot.src=hrLoginShot;
+
   clearRedirectTimers();
   setNativeTransitionPhase("idle");
   document.getElementById("nativeAuthText").textContent="SSO 인증 중";
@@ -252,8 +273,13 @@ function showSso(target,docId){
     document.getElementById("nativeAuthText").textContent="SSO 인증 완료";
     setNativeTransitionPhase("confirmed");
   },480));
-  redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("transfer"),820));
-  redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("complete"),1480));
+  if(target==="HR시스템"){
+    redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("hr-login"),820));
+    redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("complete"),1580));
+  }else{
+    redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("transfer"),820));
+    redirectTimers.push(setTimeout(()=>setNativeTransitionPhase("complete"),1480));
+  }
 }
 let aggregationTimers=[];
 let aggregationAnimations=[];
