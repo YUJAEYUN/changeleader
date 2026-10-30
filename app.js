@@ -370,3 +370,4 @@ function goStep(step){
 document.addEventListener("keydown",e=>{if(["1","2","3","4","5"].includes(e.key)&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName))goStep(Number(e.key));if(e.key==="Escape"){closePopovers();if(!document.getElementById("ssoView").hidden){clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();}}});
 
 renderDashboard();
+aggregationTimers.push(setTimeout(runAggregationAnimation,180));
