@@ -260,3 +260,58 @@ th{height:38px;font-size:12px}
   .redirect-path{width:120px;height:95px;margin:auto;transform:rotate(90deg)}
   .redirect-finish{inset:12px}
 }
+
+
+/* ===== Dashboard aggregation animation ===== */
+.system-area{position:relative}
+.aggregation-layer{
+  position:absolute;inset:-4px -4px 12px;z-index:8;pointer-events:none;opacity:0;visibility:hidden;
+  transition:opacity .28s ease
+}
+.aggregation-layer.active{opacity:1;visibility:visible}
+.aggregation-layer::before{
+  content:"";position:absolute;inset:0;border-radius:10px;
+  background:rgba(255,255,255,.46);backdrop-filter:blur(1px)
+}
+.aggregation-hub{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-48%) scale(.92);
+  min-width:178px;height:56px;padding:0 15px 0 10px;border:1px solid #b6dcd4;border-radius:14px;
+  background:#fff;box-shadow:0 12px 34px rgba(0,78,66,.14);display:flex;align-items:center;gap:10px;
+  opacity:0;z-index:5;transition:opacity .28s ease,transform .42s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease
+}
+.aggregation-layer.active .aggregation-hub{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.aggregation-hub-icon{
+  width:38px;height:38px;border-radius:10px;background:var(--hana-green);color:#fff;display:grid;place-items:center;
+  box-shadow:0 7px 16px rgba(0,145,120,.18)
+}
+.aggregation-hub-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linejoin:round}
+.aggregation-hub-copy{display:flex;flex-direction:column;gap:2px}.aggregation-hub-copy strong{font-size:12px;color:var(--navy)}.aggregation-hub-copy small{font-size:10px;color:#718096}
+.aggregation-hub.receiving{box-shadow:0 0 0 9px rgba(0,145,120,.08),0 14px 36px rgba(0,78,66,.16)}
+.aggregation-hub.receiving .aggregation-hub-icon{animation:hubPulse .5s ease}
+.aggregation-packet{
+  position:absolute;width:24px;height:24px;border-radius:50%;background:var(--hana-green);color:#fff;display:grid;place-items:center;
+  z-index:6;box-shadow:0 5px 14px rgba(0,145,120,.24);opacity:0
+}
+.aggregation-packet svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.system-card.sync-source{border-color:#8ecbbf!important;box-shadow:0 0 0 3px rgba(0,145,120,.08),0 8px 18px rgba(0,78,66,.07)!important}
+.system-card.sync-source .app-icon-tile{animation:sourcePulse .55s ease}
+.system-card.sync-done::after{
+  content:"연결됨";position:absolute;right:8px;top:7px;padding:2px 6px;border-radius:8px;background:#e8f7f3;color:var(--hana-green);
+  font-size:9px;font-weight:800
+}
+.system-card{position:relative}
+.aggregation-complete{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.88);
+  height:42px;padding:0 15px;border-radius:21px;background:var(--hana-dark);color:#fff;display:flex;align-items:center;gap:8px;
+  box-shadow:0 12px 28px rgba(0,78,66,.20);opacity:0;z-index:10;white-space:nowrap
+}
+.aggregation-complete svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.aggregation-complete.show{animation:syncComplete 1.05s ease forwards}
+@keyframes sourcePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes hubPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.13)}}
+@keyframes syncComplete{0%{opacity:0;transform:translate(-50%,-50%) scale(.88)}20%,72%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.96)}}
+@media(prefers-reduced-motion:reduce){
+  .aggregation-layer,.aggregation-hub{transition:none}
+  .system-card.sync-source .app-icon-tile,.aggregation-hub.receiving .aggregation-hub-icon,.aggregation-complete.show{animation:none}
+  .aggregation-complete.show{opacity:1;transform:translate(-50%,-50%)}
+}

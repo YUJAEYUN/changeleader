@@ -84,7 +84,24 @@
         </section>
 
         <section class="status-tabs" id="statusTabs" aria-label="결재 상태"></section>
-        <section class="system-cards" id="systemCards" aria-label="시스템별 결재 현황"></section>
+        <section class="system-area" id="systemArea">
+          <section class="system-cards" id="systemCards" aria-label="시스템별 결재 현황"></section>
+          <div class="aggregation-layer" id="aggregationLayer" aria-hidden="true">
+            <div class="aggregation-hub" id="aggregationHub">
+              <span class="aggregation-hub-icon">
+                <svg viewBox="0 0 24 24"><path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"/></svg>
+              </span>
+              <span class="aggregation-hub-copy">
+                <strong>결재 대시보드</strong>
+                <small>결재 현황 통합 중</small>
+              </span>
+            </div>
+            <div class="aggregation-complete" id="aggregationComplete">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+              <span><strong>5개 시스템</strong> · 12건 동기화 완료</span>
+            </div>
+          </div>
+        </section>
 
         <section class="documents">
           <div class="document-toolbar">
