@@ -134,8 +134,7 @@ function renderDocumentView(id){
 function renderStatusTabs(){
   const root=document.getElementById("statusTabs");
   root.innerHTML=Object.keys(statusLabel).map(key=>`<button class="status-tab ${state.status===key?"active":""}" data-status="${key}" type="button">${icons[key]}<span>${statusLabel[key]}</span><span class="status-count">${statusTotals[key]}</span></button>`).join("");
-  root.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>{state.status=btn.dataset.status;state.page=1;renderDashboard();
-aggregationTimers.push(setTimeout(runAggregationAnimation,180));}));
+  root.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>{state.status=btn.dataset.status;state.page=1;renderDashboard();}));
 }
 function renderSystemCards(){
   const systems=[["전체","전체 결재 건수",""],["하나포털","하나포털","(문서 수발신)"],["하나플러스","하나플러스","(업무 전자결재)"],["컴플라이언스시스템","컴플라이언스시스템",""],["정보보호포털","정보보호포털",""],["법령통지시스템","법령통지시스템",""]];
