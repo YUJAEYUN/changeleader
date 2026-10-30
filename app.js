@@ -134,7 +134,8 @@ function renderDocumentView(id){
 function renderStatusTabs(){
   const root=document.getElementById("statusTabs");
   root.innerHTML=Object.keys(statusLabel).map(key=>`<button class="status-tab ${state.status===key?"active":""}" data-status="${key}" type="button">${icons[key]}<span>${statusLabel[key]}</span><span class="status-count">${statusTotals[key]}</span></button>`).join("");
-  root.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>{state.status=btn.dataset.status;state.page=1;renderDashboard();}));
+  root.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>{state.status=btn.dataset.status;state.page=1;renderDashboard();
+aggregationTimers.push(setTimeout(runAggregationAnimation,180));}));
 }
 function renderSystemCards(){
   const systems=[["전체","전체 결재 건수",""],["하나포털","하나포털","(문서 수발신)"],["하나플러스","하나플러스","(업무 전자결재)"],["컴플라이언스시스템","컴플라이언스시스템",""],["정보보호포털","정보보호포털",""],["법령통지시스템","법령통지시스템",""]];
@@ -239,6 +240,98 @@ function showSso(target,docId){
   redirectTimers.push(setTimeout(()=>setRedirectPhase("arrival",target+" 연결을 준비하고 있습니다.",3),1700));
   redirectTimers.push(setTimeout(()=>setRedirectPhase("complete",target+" 결재 시스템으로 전환되었습니다.",3),2350));
 }
+let aggregationTimers=[];
+let aggregationAnimations=[];
+let aggregationRunning=false;
+
+function clearAggregationAnimation(){
+  aggregationTimers.forEach(clearTimeout);
+  aggregationTimers=[];
+  aggregationAnimations.forEach(animation=>{try{animation.cancel();}catch{}});
+  aggregationAnimations=[];
+  aggregationRunning=false;
+  const layer=document.getElementById("aggregationLayer");
+  const hub=document.getElementById("aggregationHub");
+  const complete=document.getElementById("aggregationComplete");
+  if(layer)layer.classList.remove("active");
+  if(hub)hub.classList.remove("receiving");
+  if(complete)complete.classList.remove("show");
+  document.querySelectorAll(".system-card").forEach(card=>card.classList.remove("sync-source","sync-done"));
+  document.querySelectorAll(".aggregation-packet").forEach(packet=>packet.remove());
+}
+
+function createAggregationPacket(layer,startX,startY,endX,endY,delay){
+  const packet=document.createElement("span");
+  packet.className="aggregation-packet";
+  packet.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12"/><path d="m13 8 4 4-4 4"/></svg>';
+  packet.style.left=(startX-12)+"px";
+  packet.style.top=(startY-12)+"px";
+  layer.appendChild(packet);
+  const animation=packet.animate([
+    {opacity:0,transform:"translate(0,0) scale(.72)"},
+    {opacity:1,offset:.12},
+    {opacity:1,transform:`translate(${endX-startX}px,${endY-startY}px) scale(1)`,offset:.84},
+    {opacity:0,transform:`translate(${endX-startX}px,${endY-startY}px) scale(.62)`}
+  ],{duration:720,delay,easing:"cubic-bezier(.25,.75,.2,1)",fill:"forwards"});
+  aggregationAnimations.push(animation);
+  animation.finished.then(()=>packet.remove()).catch(()=>{});
+}
+
+function runAggregationAnimation(){
+  clearAggregationAnimation();
+  const layer=document.getElementById("aggregationLayer");
+  const hub=document.getElementById("aggregationHub");
+  const complete=document.getElementById("aggregationComplete");
+  const area=document.getElementById("systemArea");
+  if(!layer||!hub||!complete||!area)return;
+
+  const cards=[...document.querySelectorAll("#systemCards .system-card")].filter(card=>card.dataset.system!=="전체");
+  if(cards.length!==5)return;
+
+  aggregationRunning=true;
+  layer.classList.add("active");
+
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    cards.forEach(card=>card.classList.add("sync-done"));
+    complete.classList.add("show");
+    aggregationTimers.push(setTimeout(()=>clearAggregationAnimation(),1100));
+    return;
+  }
+
+  requestAnimationFrame(()=>{
+    const areaRect=area.getBoundingClientRect();
+    const hubRect=hub.getBoundingClientRect();
+    const endX=hubRect.left-areaRect.left+hubRect.width/2;
+    const endY=hubRect.top-areaRect.top+hubRect.height/2;
+
+    cards.forEach((card,index)=>{
+      const rect=card.getBoundingClientRect();
+      const startX=rect.left-areaRect.left+rect.width/2;
+      const startY=rect.top-areaRect.top+rect.height/2;
+      const delay=150+index*145;
+
+      aggregationTimers.push(setTimeout(()=>card.classList.add("sync-source"),delay));
+      createAggregationPacket(layer,startX,startY,endX,endY,delay+80);
+      aggregationTimers.push(setTimeout(()=>{
+        card.classList.remove("sync-source");
+        card.classList.add("sync-done");
+        hub.classList.remove("receiving");
+        void hub.offsetWidth;
+        hub.classList.add("receiving");
+      },delay+760));
+    });
+
+    const finishAt=150+(cards.length-1)*145+980;
+    aggregationTimers.push(setTimeout(()=>{
+      hub.classList.remove("receiving");
+      complete.classList.remove("show");
+      void complete.offsetWidth;
+      complete.classList.add("show");
+    },finishAt));
+    aggregationTimers.push(setTimeout(()=>clearAggregationAnimation(),finishAt+1150));
+  });
+}
+
 function resetFilters(){state.status="all";state.system="전체";state.search="";state.dateFilter="all";state.readFilter="all";state.sortDesc=true;state.page=1;state.pageSize=10;state.clickedId=null;renderDashboard();}
 let toastTimer;function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),1500);}
 function closePopovers(except){if(except!=="notice")document.getElementById("noticePopover").hidden=true;if(except!=="profile")document.getElementById("profilePopover").hidden=true;}
@@ -257,7 +350,7 @@ document.querySelectorAll("[data-read-filter]").forEach(btn=>btn.addEventListene
 document.getElementById("filterReset").addEventListener("click",()=>{state.dateFilter="all";state.readFilter="all";state.search="";state.page=1;renderDashboard();});
 document.getElementById("sortDateBtn").addEventListener("click",()=>{state.sortDesc=!state.sortDesc;renderDocuments();});
 document.getElementById("pageSizeSelect").addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;renderDocuments();});
-document.getElementById("refreshBtn").addEventListener("click",e=>{e.currentTarget.classList.remove("spin");requestAnimationFrame(()=>e.currentTarget.classList.add("spin"));resetFilters();toast("현재 기준으로 결재 현황을 갱신했습니다.");});
+document.getElementById("refreshBtn").addEventListener("click",e=>{e.currentTarget.classList.remove("spin");requestAnimationFrame(()=>e.currentTarget.classList.add("spin"));resetFilters();aggregationTimers.push(setTimeout(runAggregationAnimation,90));});
 document.getElementById("backDashboardBtn").addEventListener("click",()=>{clearRedirectTimers();state.activeDocId?activateTab("detail"):renderDashboard();});
 document.getElementById("noticeBtn").addEventListener("click",()=>{const p=document.getElementById("noticePopover");const open=p.hidden;closePopovers("notice");p.hidden=!open;});
 document.getElementById("profileBtn").addEventListener("click",()=>{const p=document.getElementById("profilePopover");const open=p.hidden;closePopovers("profile");p.hidden=!open;});
