@@ -119,7 +119,7 @@ function closeDetailTab(){
   document.getElementById("ssoView").hidden=true;
   renderWorkspaceTabs();
 }
-function canGoToApproval(doc){return doc.status==="pending"||doc.system==="하나포털";}
+function canGoToApproval(doc){return doc.status==="pending"||(doc.system==="하나포털"&&doc.status!=="rejected");}
 function renderDocumentView(id){
   const doc=documents.find(d=>d.id===id);if(!doc)return;
   document.getElementById("docSystemLabel").textContent=doc.system;
