@@ -119,6 +119,7 @@ function closeDetailTab(){
   document.getElementById("ssoView").hidden=true;
   renderWorkspaceTabs();
 }
+function canGoToApproval(doc){return doc.status==="pending"||doc.system==="하나포털";}
 function renderDocumentView(id){
   const doc=documents.find(d=>d.id===id);if(!doc)return;
   document.getElementById("docSystemLabel").textContent=doc.system;
@@ -129,7 +130,7 @@ function renderDocumentView(id){
   ].map(([k,v])=>`<div class="summary-cell"><span>${k}</span><strong>${v}</strong></div>`).join("");
   document.getElementById("docSummaryText").textContent=doc.summary;
   const approve=document.getElementById("docApprovalBtn");
-  approve.hidden=doc.status!=="pending";
+  approve.hidden=!canGoToApproval(doc);
   approve.onclick=()=>showSso(doc.system,doc.id);
 }
 function renderStatusTabs(){
@@ -177,13 +178,13 @@ function renderDocuments(){
     <td title="${doc.number}">${doc.number}</td>
     <td title="${doc.title}">${doc.title}${doc.isNew&&!readState[doc.id]?'<span class="new-badge">NEW</span>':""}</td>
     <td title="${doc.system}">${doc.system}</td><td>${doc.requester}</td><td>${fmtDate(doc.date)}</td>
-    <td><button class="action-button ${state.clickedId===doc.id?"clicked":""}" data-action-id="${doc.id}" type="button">${doc.status==="pending"?"결재하러 가기 ↗":"상세보기 ↗"}</button></td>
+    <td><button class="action-button ${state.clickedId===doc.id?"clicked":""}" data-action-id="${doc.id}" type="button">${canGoToApproval(doc)?"결재하러 가기 ↗":"상세보기 ↗"}</button></td>
   </tr>`).join("");
   document.getElementById("emptyState").hidden=all.length!==0;
   body.querySelectorAll("[data-row-id]").forEach(row=>row.addEventListener("click",e=>{if(e.target.closest("[data-action-id]"))return;openDocumentTab(Number(row.dataset.rowId));}));
   body.querySelectorAll("[data-action-id]").forEach(btn=>btn.addEventListener("click",e=>{
     e.stopPropagation();const doc=documents.find(d=>d.id===Number(btn.dataset.actionId));if(!doc)return;setRead(doc.id,true);
-    if(doc.status==="pending"){state.clickedId=doc.id;renderDocuments();setTimeout(()=>showSso(doc.system,doc.id),220);}else openDocumentTab(doc.id);
+    if(canGoToApproval(doc)){state.clickedId=doc.id;renderDocuments();setTimeout(()=>showSso(doc.system,doc.id),220);}else openDocumentTab(doc.id);
   }));
   renderPagination(pages);
 }
