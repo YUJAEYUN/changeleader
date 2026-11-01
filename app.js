@@ -226,6 +226,70 @@ const nativeSystemShots={
 };
 const hrLoginShot="./assets/source-systems/hr-login.png";
 
+function renderNativeDocuments(target,selected){
+  const root=document.getElementById("nativeDocumentOverlay");
+  const configs={
+    "하나포털":{w:1820,h:810,x:217,y:114,width:1599,row:33,cols:[62,145,750,115,150,377],heads:false},
+    "하나플러스":{w:1062,h:595,x:5,y:125,width:1025,row:28,cols:[252,166,172,178,147,110]},
+    "HR시스템":{w:1290,h:922,x:290,y:295,width:973,row:33,cols:[52,148,90,100,70,201,120,192]},
+    "컴플라이언스시스템":{w:1902,h:907,x:671,y:588,width:569,row:37,cols:[340,107,122]}
+  };
+  const c=configs[target];if(!c){root.innerHTML="";return;}
+  const rows=documents.filter(d=>d.system===target).sort((a,b)=>(b.id===selected?.id)-(a.id===selected?.id));
+  const esc=v=>String(v).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[ch]));
+  let svg='';
+  const rect=(x,y,w,h,fill,stroke='none')=>svg+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}"/>`;
+  const text=(x,y,v,size=12,color='#263841',weight=400)=>svg+=`<text x="${x}" y="${y}" font-size="${size}" fill="${color}" font-weight="${weight}">${esc(v)}</text>`;
+  const cut=(v,width,size=12)=>{let used=0,out='';for(const ch of String(v)){used+=size*(/[\u0000-\u007f]/.test(ch)?.55:1);if(used>width-15)return out+'…';out+=ch;}return out;};
+  rect(c.x,c.y,c.width,c.row*rows.length+3,'#fff');
+  if(target==='하나플러스'){rect(604,46,69,18,'#fff');text(606,60,fmtDate(relativeDate(7)).replaceAll('. ','/'),11);rect(710,46,69,18,'#fff');text(712,60,fmtDate(loadedAt).replaceAll('. ','/'),11);}
+  if(target==='하나포털'){rect(217,0,200,44,'#fff');text(217,27,'결재문서',20,'#333',600);text(320,27,rows.length,16,'#009c9a',600);}
+  if(target==='HR시스템'){rect(280,129,95,31,'#768094');text(304,150,'전체함',13,'#fff',600);rect(300,242,180,26,'#fff');text(300,260,'전체 결재 내역',13,'#235363',600);rect(793,92,73,14,'#fff');text(797,103,fmtDate(loadedAt).replaceAll('. ','-'),11);rect(756,210,73,17,'#fff');text(758,223,fmtDate(loadedAt).replaceAll('. ','-'),11);}
+
+  // Clear screenshot empty-state labels only where live content replaces them.
+  if(target==='컴플라이언스시스템')rect(850,719,260,43,'#fff');
+  rows.forEach((d,i)=>{
+    const y=c.y+i*c.row;const active=d.id===selected?.id;
+    rect(c.x,y,c.width,c.row,active?'#edf8f5':i%2?'#fafbfc':'#fff','#dfe4e7');
+    if(active)rect(c.x,y,3,c.row,'#009780');
+    const date=fmtDate(d.date).replaceAll('. ','-');
+    let cells;
+    if(target==='하나포털')cells=[statusLabel[d.status],d.number,d.title,d.requester,date,d.status==='pending'?'김하나 결재 대기':statusLabel[d.status]];
+    if(target==='하나플러스')cells=[d.title,d.number,date,'업무지원부',d.requester,statusLabel[d.status]];
+    if(target==='HR시스템')cells=[i+1,d.title,'H'+String(240100+i),d.requester,'대리','업무지원부',date,statusLabel[d.status]];
+    if(target==='컴플라이언스시스템')cells=[d.title,d.requester,date];
+    let x=c.x;
+    cells.forEach((cell,j)=>{text(x+9,y+c.row/2+4,cut(cell,c.cols[j]),12,(cell===statusLabel[d.status]&&d.status==='pending')?'#008e7b':'#293b43',active?600:400);x+=c.cols[j];});
+  });
+  const d=selected||rows[0];
+  if(d){
+    const x=c.x+12,y=c.y+c.row*rows.length+30,w=c.width-24;
+    const available=c.h-y-45;
+    if(available>180){
+      rect(x,y,w,Math.min(230,available),'#fff','#d5dfe1');
+      rect(x,y,w,31,'#f3f6f7');
+      text(x+14,y+21,'문서 상세',12,'#33494f',600);
+      text(x+16,y+60,d.title,16,'#1f363f',600);
+      text(x+16,y+87,`${d.number}  ·  ${d.requester}  ·  ${fmtDate(d.date)}`,11,'#738187');
+      rect(x+16,y+103,w-32,1,'#e3e9eb');
+      text(x+16,y+129,'요청 내용',12,'#3b5057',600);
+      text(x+16,y+151,cut(d.summary,w-32),12,'#485e65');
+      text(x+16,y+191,'결재선',12,'#3b5057',600);
+      text(x+90,y+191,`${d.requester} (기안)   →   부서장 (검토)   →   김하나 (${statusLabel[d.status]})`,12,d.status==='pending'?'#008e7b':'#53666d',500);
+    }
+  }
+  if(target==='컴플라이언스시스템'){
+    const d=selected||rows[0];
+    if(d){rect(683,700,545,155,'#fff','#dce5e6');rect(683,700,545,28,'#f3f6f7');text(695,719,'선택 문서 상세',12,'#33494f',600);text(695,752,d.title,15,'#1f363f',600);text(695,777,`${d.number} · ${d.requester} · ${statusLabel[d.status]}`,12,'#008e7b');text(695,801,cut(d.summary,520,11),11,'#485e65');text(695,833,`${d.requester} (기안) → 부서장 (검토) → 김하나 (결재)`,12,'#53666d');}
+    // Mirror the same requests in the native dashboard task panels.
+    for(const x of [1278]){
+      rect(x,180,570,285,'#fff');
+      rows.forEach((d,i)=>{text(x+10,208+i*39,cut(d.title,310),13);text(x+340,208+i*39,fmtDate(d.date),12,'#687b80');text(x+482,208+i*39,statusLabel[d.status],12,'#009780');rect(x,222+i*39,570,1,'#e4e8eb');});
+    }
+  }
+  root.innerHTML=`<svg viewBox="0 0 ${c.w} ${c.h}" preserveAspectRatio="none" role="img" aria-label="${esc(target)} 결재 문서 목록 및 선택 문서 상세" xmlns="http://www.w3.org/2000/svg" font-family="Apple SD Gothic Neo,Malgun Gothic,Arial,sans-serif">${svg}</svg>`;
+}
+
 function showSso(target,docId){
   const doc=docId?documents.find(d=>d.id===docId):null;
   if(docId){state.activeDocId=docId;setRead(docId,true);}
@@ -257,6 +321,7 @@ function showSso(target,docId){
   realShot.hidden=!hasRealShot;
   loginShot.hidden=target!=="HR시스템";
   if(hasRealShot) realShot.src=nativeSystemShots[target];
+  renderNativeDocuments(target,doc);
   if(target==="HR시스템") loginShot.src=hrLoginShot;
 
   clearRedirectTimers();
